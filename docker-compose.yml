@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  mysqldb:
+    image: mysql:latest
+    ports:
+      - 3306:3306
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASS}
+      - MYSQL_DATABASE=${DB_NAME}
+    volumes:
+      - mysqlVolume:/var/lib/mysql
+      - mysqlConfig:/etc/mysql
+    hostname: mysqldb
+
+volumes:
+  mysqlVolume:
+  mysqlConfig:
