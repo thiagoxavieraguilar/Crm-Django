@@ -13,7 +13,6 @@ services:
     volumes:
       - mysqlVolume:/var/lib/mysql
       - mysqlConfig:/etc/mysql
-    hostname: mysqldb
 
 volumes:
   mysqlVolume:
