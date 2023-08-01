@@ -4,13 +4,13 @@ repos:
       - id: black
         name: black
         entry: black
-        language: system
+        language: python
         types: [python]
         additional_dependencies: [black]
 
       - id: isort
         name: isort
         entry: isort
-        language: system
+        language: python
         types: [python]
         additional_dependencies: [isort]

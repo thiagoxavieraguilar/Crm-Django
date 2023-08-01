@@ -1,9 +1,12 @@
-from django.shortcuts import render,redirect
-from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import redirect, render
+from django.http import HttpRequest, HttpResponse
+
 from .forms import SignUp
 
-def home(request):
+
+def home(request: HttpRequest) -> HttpResponse:
     """
     View function for the home page.
 
@@ -16,28 +19,29 @@ def home(request):
     :param request: The HTTP request object.
     :return: The rendered 'home.html' template.
     """
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
         # Auntheticate
-        user = authenticate(request=request,username=username,password=password)
+        user = authenticate(request=request, username=username, password=password)
         if user:
-             # If authentication is successful, log the user in
-            login(request=request,user=user)
+            # If authentication is successful, log the user in
+            login(request=request, user=user)
             # Display a success message
-            print('ok')
-            messages.success(request=request,message="You have been logged in")
+            print("ok")
+            messages.success(request=request, message="You have been logged in")
             return redirect("home")
         else:
             # If authentication fails, display an error message
-            messages.error(request=request,message="There was an error, please try again")
-            print('no logado')
+            messages.error(
+                request=request, message="There was an error, please try again"
+            )
+            print("no logado")
             return redirect("home")
-    return render(request,'home.html',{})
+    return render(request, "home.html", {})
 
 
-
-def logout_user(request):
+def logout_user(request: HttpRequest) -> HttpResponse:
     """
     View function for logging out the user.
 
@@ -47,26 +51,33 @@ def logout_user(request):
     :return: The redirect response to the 'home' function.
     """
     logout(request=request)
-    messages.success(request=request,message="You have been logout")
+    messages.success(request=request, message="You have been logout")
     return redirect("home")
 
 
+def register_user(request: HttpRequest) -> HttpResponse:
+    """
+    View function for registerthe user.
 
-def register_user(request):
-    if request.method == 'POST':
+    If the HTTP request method is POST, it processes the SignUp form data, logs in the newly registered user,
+    and redirects to the 'home' function after displaying a success message.
+    If the method is GET, it renders the 'register.html' template with an empty SignUp form.
+
+    :param request: The HTTP request object.
+    :return: The redirect response to the 'home' function or the rendered 'register.html' template.
+    """
+    if request.method == "POST":
         form = SignUp(request.POST)
         if form.is_valid():
             form.save()
             # Authentication and login
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password1']
-            user = authenticate(username=username,password=password)
-            login(request=request,user=user)
-            messages.success(request=request,message="Your account was created")
-            return redirect('home')
+            username = form.cleaned_data["username"]
+            password = form.cleaned_data["password1"]
+            user = authenticate(username=username, password=password)
+            login(request=request, user=user)
+            messages.success(request=request, message="Your account was created")
+            return redirect("home")
     else:
         form = SignUp()
-        return render(request,'register.html',{'form':form})
-    return render(request,'register.html',{'form':form})
-
-
+        return render(request, "register.html", {"form": form})
+    return render(request, "register.html", {"form": form})
