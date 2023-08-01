@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-
+from .forms import SignUp
 
 def home(request):
     """
@@ -39,11 +39,34 @@ def home(request):
 
 def logout_user(request):
     """
-    View function for logout user.
+    View function for logging out the user.
+
+    Logs out the authenticated user, displays a success message, and redirects to the 'home' function.
+
     :param request: The HTTP request object.
-    :return: The redirect for 'home'.
+    :return: The redirect response to the 'home' function.
     """
     logout(request=request)
     messages.success(request=request,message="You have been logout")
     return redirect("home")
+
+
+
+def register_user(request):
+    if request.method == 'POST':
+        form = SignUp(request.POST)
+        if form.is_valid():
+            form.save()
+            # Authentication and login
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password1']
+            user = authenticate(username=username,password=password)
+            login(request=request,user=user)
+            messages.success(request=request,message="Your account was created")
+            return redirect('home')
+    else:
+        form = SignUp()
+        return render(request,'register.html',{'form':form})
+    return render(request,'register.html',{'form':form})
+
 
