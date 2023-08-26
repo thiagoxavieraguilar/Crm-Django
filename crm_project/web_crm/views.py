@@ -1,11 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import redirect, render,get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
-from .models import Record
+from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import SignUp
+from .forms import AddRecordForm, SignUp
+from .models import Record
 
 
 def home(request: HttpRequest) -> HttpResponse:
@@ -21,7 +21,6 @@ def home(request: HttpRequest) -> HttpResponse:
     :param request: The HTTP request object.
     :return: The rendered 'home.html' template.
     """
-
 
     records = Record.objects.all()
     if request.method == "POST":
@@ -43,7 +42,7 @@ def home(request: HttpRequest) -> HttpResponse:
             )
             print("no logado")
             return redirect("home")
-    return render(request, "home.html", {'records':records})
+    return render(request, "home.html", {"records": records})
 
 
 def logout_user(request: HttpRequest) -> HttpResponse:
@@ -107,14 +106,14 @@ def customer_record(request: HttpRequest, pk: int) -> HttpResponse:
     """
     try:
         record = get_object_or_404(Record, id=pk)
-        return render(request, 'record.html', {'customer_record': record})
+        return render(request, "record.html", {"customer_record": record})
     except Record.DoesNotExist:
         messages.error(request, "Record not found.")
-        return redirect('home')
-    
+        return redirect("home")
+
 
 @login_required
-def delete_record(request: HttpRequest,pk: int) -> HttpResponse:
+def delete_record(request: HttpRequest, pk: int) -> HttpResponse:
     """
     Delete a specific record identified by 'pk'.
 
@@ -131,7 +130,62 @@ def delete_record(request: HttpRequest,pk: int) -> HttpResponse:
         customer_record = get_object_or_404(Record, id=pk)
         customer_record.delete()
         messages.success(request, "Record deleted")
-        return redirect('home')
+        return redirect("home")
     except Record.DoesNotExist:
         messages.error(request, "Record not found.")
-        return redirect('home')
+        return redirect("home")
+
+
+@login_required
+def add_record(request: HttpRequest) -> HttpResponse:
+    """
+    Add a new record to the database.
+
+    If the user is authenticated, this view processes the information submitted via the 'add_record.html' form
+    to create a new record in the database. Upon successful addition, a success message will be displayed,
+    and the user will be redirected to the 'home' page.
+    If the form data is invalid, an error message will be shown,and the user will be redirected to the 'home' page.
+
+    :param request: The HTTP request object.
+    :return: Redirect response to the 'home' function or rendering of the 'add_record.html' template.
+    """
+    form = AddRecordForm(request.POST or None)
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Record Added")
+            return redirect("home")
+        else:
+            messages.error(request, "You Must Be Logged In To Do That...")
+            return redirect("home")
+    return render(request, "add_record.html", {"form": form})
+
+
+@login_required
+def update_record(request: HttpRequest, pk: int) -> HttpResponse:
+    """
+    Update a specific record identified by 'pk'.
+
+    This view allows an authenticated user to update a record.
+    If the record exists and the user successfully updates it,
+    they are redirected to the 'home' page with a success message.
+    If the record doesn't exist, an error message is shown,
+    and the user is redirected to the 'home' page.
+
+    :param request: The HTTP request object.
+    :param pk: The primary key of the record to update.
+    :return: Redirect response to the 'home' function.
+    """
+    current_record = get_object_or_404(Record, id=pk)
+    form = AddRecordForm(request.POST or None, instance=current_record)
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Record Has Been Updated!")
+            return redirect("home")
+        else:
+            messages.error(request, "Invalid form data. Please correct the errors.")
+            return redirect("home")
+    else:
+        form = AddRecordForm(instance=current_record)
+        return render(request, "update_record.html", {"form": form})
